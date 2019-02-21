@@ -2,20 +2,10 @@ import spline from "cubic-spline";
 import deepmerge from "deepmerge";
 import React, { Component } from "react";
 import { View, PanResponder } from "react-native";
+import { Dimensions } from "react-native";
 import memoizeOne from "memoize-one";
 import _ from "lodash";
-import Svg, { Polyline, Rect, Text, Line, Polygon, LinearGradient, Defs, Stop, Circle } from "react-native-svg";
-
-const RenderValuePoint = ({ point, offset, color, radius }) => {
-  const dataX = point.x;
-  const dataY = point.y;
-
-  return (
-    <React.Fragment>
-      <Circle cx={dataX + offset.x} cy={dataY} r={radius} fill={color} />
-    </React.Fragment>
-  );
-};
+import Svg, { Polyline, Rect, Text, Line, Polygon, LinearGradient, Defs, Stop } from "react-native-svg";
 
 class LineChart extends Component {
   constructor(props) {
@@ -23,7 +13,8 @@ class LineChart extends Component {
     this.state = { dimensions: undefined, tooltipIndex: undefined, layoutX: 0 };
     this.recalculate = memoizeOne(this.recalculate);
 
-    if (_.get(props.config, "tooltip.visible", false) && props.config.interpolation !== "spline") {
+    // if (_.get(props.config, "tooltip.visible", false) && props.config.interpolation !== "spline") {
+    if (_.get(props.config, "tooltip.visible", false)) {
       this._panResponder = PanResponder.create({
         onMoveShouldSetPanResponder: (evt, gestureState) => {
           if (Math.abs(gestureState.dx) > 10) {
@@ -32,7 +23,7 @@ class LineChart extends Component {
 
           const xTouch = -this.state.layoutX + gestureState.moveX - this.gridOffset.x + this.props.scrollOffset;
           if (this.state.dimensions && this.points) {
-            idx = Math.round((xTouch / this.gridSize.width) * (this.props.data.length - 1));
+            let idx = Math.round((xTouch / this.gridSize.width) * (this.points.length - 1));
             if (this.state.tooltipIndex != idx) {
               this.setState({ tooltipIndex: idx });
             }
@@ -187,11 +178,10 @@ class LineChart extends Component {
 
   renderTooltip(mergedConfig) {
     const { tooltip } = mergedConfig;
-
-    const dataX = this.points[this.state.tooltipIndex].x;
-    const dataY = this.points[this.state.tooltipIndex].y;
-
-    const dataValue = this.props.data[this.state.tooltipIndex];
+    const tooltipIndex = this.state.tooltipIndex;
+    const dataX = this.points[tooltipIndex].x;
+    const dataY = this.points[tooltipIndex].y;
+    const dataValue = dataY;//this.props.data[this.state.tooltipIndex];
 
     const textWidth = tooltip.textFormatter(dataValue).length * tooltip.textFontSize * 0.66 + tooltip.boxPaddingX;
     const textHeight = tooltip.textFontSize * 1.5 + tooltip.boxPaddingY;
@@ -255,16 +245,11 @@ class LineChart extends Component {
 
     const { style, config, xLabels } = this.props;
     const mergedConfig = deepmerge(defaultConfig, config);
-    const { grid, line, area, yAxis, xAxis, insetX, insetY, backgroundColor, valuePoint } = mergedConfig;
+    const { grid, line, area, yAxis, xAxis, insetX, insetY, backgroundColor, tooltip } = mergedConfig;
     const yLabels = this.yLabels;
     const xLabelPoints = this.xLabelPoints;
     const gridSize = this.gridSize;
     const gridOffset = this.gridOffset;
-
-    const dots =
-      valuePoint.visible && this.points
-        ? this.points.map(point => <RenderValuePoint key={point.x} point={point} offset={gridOffset} color={valuePoint.color} radius={valuePoint.radius} />)
-        : undefined;
 
     return (
       <View
@@ -364,7 +349,6 @@ class LineChart extends Component {
               />
             )}
             {this.state.tooltipIndex && this.renderTooltip(mergedConfig)}
-            {dots}
           </Svg>
         ) : (
           undefined
@@ -421,11 +405,6 @@ const defaultConfig = {
     boxPaddingX: 0,
     textColor: "black",
     textFontSize: 10
-  },
-  valuePoint: {
-    visible: false,
-    color: "#777",
-    radius: 5
   },
   insetY: 0,
   insetX: 0,
