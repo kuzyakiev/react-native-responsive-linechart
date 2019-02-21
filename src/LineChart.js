@@ -272,7 +272,13 @@ class LineChart extends Component {
         onLayout={this.onLayout}
         {..._.get(this._panResponder, "panHandlers", {})}
         ref={view => {
-          this.myComponent = view;
+          // Note that when the referenced component is unmounted and whenever the ref changes, the old ref will be called with null as an
+          // argument. This prevents memory leaks in the case that the instance is stored, as in the second example. Also note that when
+          // writing refs with inline function expressions as in the examples here, React sees a different function object each time so on
+          // every update, ref will be called with null immediately before it's called with the component instance.
+          if (view) {
+            this.myComponent = view;
+          }
         }}
       >
         {this.points ? (
