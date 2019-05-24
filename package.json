@@ -1,6 +1,6 @@
 {
   "name": "react-native-responsive-linechart",
-  "version": "1.6.0",
+  "version": "2.0.1",
   "author": "Xander Deseyn",
   "license": "MIT",
   "description": "Customizable linechart for react-native that works with flex",
@@ -20,14 +20,14 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-svg": ">=7.0.0"
   },
   "dependencies": {
     "cubic-spline": "^1.0.4",
-    "deepmerge": "^2.1.0",
-    "expo": "^31.0.4",
-    "lodash": "^4.17.10",
-    "memoize-one": "^4.0.0"
+    "deepmerge": "^3.2.0",
+    "lodash": "^4.17.11",
+    "memoize-one": "^5.0.4"
   },
   "main": "index.js",
   "scripts": {

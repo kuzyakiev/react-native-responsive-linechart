@@ -3,30 +3,23 @@ import { StyleSheet, Text, View, ScrollView } from "react-native";
 import LineChart from "./LineChart";
 
 export default class App extends React.Component {
-  state = { offset: 0 };
-
-  _onScroll(e) {
-    this.setState({ offset: e.nativeEvent.contentOffset.x });
-  }
   render() {
     return (
       <View style={{ flex: 1, marginTop: 50 }}>
         <ScrollView style={{ height: "100%", flex: 1 }}>
-          <View style={{ margin: 10, height: 200, elevation: 5, backgroundColor: "#fff", shadowColor: "black", shadowOpacity: 1 }}>
+          <View style={{ margin: 10, height: 200, elevation: 2, backgroundColor: "#fff", shadowColor: "black", shadowOpacity: 0.5 }}>
             <LineChart style={{ flex: 1 }} config={config1} data={data1} />
           </View>
-          <ScrollView horizontal onScroll={e => this._onScroll(e)}>
-            <View style={{ margin: 10, height: 200, width: 1000, elevation: 5, backgroundColor: "#ff0", shadowColor: "black", shadowOpacity: 1 }}>
-              <LineChart scrollOffset={this.state.offset} style={{ flex: 1 }} config={config2} data={data2} xLabels={labels2} />
-            </View>
-          </ScrollView>
-          <View style={{ margin: 10, height: 200, elevation: 5, backgroundColor: "#fff", shadowColor: "black", shadowOpacity: 1 }}>
+          <View style={{ margin: 10, height: 200, elevation: 2, backgroundColor: "#ff0", shadowColor: "black", shadowOpacity: 0.5 }}>
+            <LineChart style={{ flex: 1 }} config={config2} data={data2} xLabels={labels2} />
+          </View>
+          <View style={{ margin: 10, height: 200, elevation: 2, backgroundColor: "#fff", shadowColor: "black", shadowOpacity: 0.5 }}>
             <LineChart style={{ flex: 1 }} config={config3} data={data3} />
           </View>
-          <View style={{ margin: 10, height: 200, elevation: 5, backgroundColor: "#fff", shadowColor: "black", shadowOpacity: 1 }}>
+          <View style={{ margin: 10, height: 200, elevation: 2, backgroundColor: "#fff", shadowColor: "black", shadowOpacity: 0.5 }}>
             <LineChart style={{ flex: 1 }} config={config4} data={data4} />
           </View>
-          <View style={{ margin: 10, height: 200, elevation: 5, backgroundColor: "#fff", shadowColor: "black", shadowOpacity: 1 }}>
+          <View style={{ margin: 10, height: 200, elevation: 2, backgroundColor: "#fff", shadowColor: "black", shadowOpacity: 0.5 }}>
             <LineChart style={{ flex: 1 }} config={config5} data={data5} />
           </View>
         </ScrollView>
@@ -34,25 +27,8 @@ export default class App extends React.Component {
     );
   }
 }
-const data1 = [0, 0];
-// const data1 = [
-//   0,
-//   7957,
-//   -986,
-//   10465,
-//   9076,
-//   23373,
-//   17436,
-//   9721,
-//   8658,
-//   24347,
-//   18553,
-//   23849,
-//   19721,
-//   39840,
-//   36740,
-//   29041,
-// ];
+
+const data1 = [0, 7957, -986, 10465, 9076, 23373, 17436, 9721, 8658, 24347, 18553, 23849, 19721, 39840, 36740, 29041];
 const config1 = {
   line: {
     visible: true,
@@ -62,11 +38,16 @@ const config1 = {
   area: {
     visible: false
   },
-  grid: {},
+  tooltip: {
+    visible: true,
+    labelFontSize: 10
+  },
+  grid: {
+    stepSize: 10000
+  },
   yAxis: {
     labelColor: "#54a0ff"
   },
-  interpolation: "spline",
   insetY: 10,
   insetX: 10
 };
@@ -92,12 +73,13 @@ const config2 = {
   grid: {
     stepSize: 15
   },
-  tooltip: {
+  dataPoint: {
     visible: true,
-    textFontSize: 10
+    radius: 3,
+    label: { visible: true, marginBottom: 25 }
   },
   insetY: 10,
-  insetX: 100
+  insetX: 10
 };
 
 const data3 = [-10, -15, 40, 19, 32, 15, 52, 55, 20, 60, 78, 42, 56];

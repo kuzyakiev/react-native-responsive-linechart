@@ -314,8 +314,7 @@ class LineChart extends Component {
     if (dataPoint.visible && this.points) {
       return this.points.map((point, index) => (
         <React.Fragment key={point.x}>
-          <Circle cx={point.x + this.gridOffset.x} cy={point.y} r={dataPoint.radius} fill={dataPoint.outerColor} />
-          <Circle cx={point.x + this.gridOffset.x} cy={point.y} r={dataPoint.radius / 2} fill={dataPoint.innerColor} />
+          <Circle cx={point.x + this.gridOffset.x} cy={point.y} r={dataPoint.radius} fill={dataPoint.color} />
           {label.visible && (
             <Text
               fill={dataPoint.label.labelColor}
@@ -512,9 +511,7 @@ const defaultConfig = {
       labelFontSize: 12,
       labelColor: "#777",
       labelFormatter: v => String(v),
-      marginBottom: 25,
-      innerColor: "#5B94FF",
-      outerColor: "rgba(189,212,255,0.4)",
+      marginBottom: 25
     }
   },
   insetY: 0,
