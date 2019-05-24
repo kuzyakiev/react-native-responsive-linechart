@@ -5,7 +5,7 @@ import { View, PanResponder } from "react-native";
 import { Dimensions } from "react-native";
 import memoizeOne from "memoize-one";
 import _ from "lodash";
-import Svg, { Polyline, Rect, Text, Line, Polygon, LinearGradient, Defs, Stop } from "react-native-svg";
+import Svg, { Polyline, Rect, Text, Line, Polygon, LinearGradient, Defs, Stop, Circle } from "react-native-svg";
 
 class LineChart extends Component {
   constructor(props) {
@@ -72,8 +72,8 @@ class LineChart extends Component {
     const labelAmount = Math.ceil(this.range / grid.stepSize);
 
     this.yLabels = Array(labelAmount)
-      .fill()
-      .map((e, i) => this.lowestYLabel + grid.stepSize * i);
+        .fill()
+        .map((e, i) => this.lowestYLabel + grid.stepSize * i);
 
     if (!yAxis.visible) {
       this.yAxisWidth = 0;
@@ -157,7 +157,9 @@ class LineChart extends Component {
   }
 
   formatPoints(points) {
-    return points.map(p => p.x + "," + p.y).join(" ");
+    let formattedPoints = points.map(p => p.x + "," + p.y).join(" ");
+    console.log('!!!!!!!formattedPoints: ', formattedPoints);
+    return formattedPoints;
   }
 
   calculateAreaPoints(interpolation) {
@@ -176,6 +178,24 @@ class LineChart extends Component {
     this.setState({ dimensions: { width, height } });
   };
 
+  renderDataPoints = config => {
+    const { dataPoint } = config;
+    console.log('scrrah config', config);
+    let lastPoint = this.points[this.points.length - 1];
+
+    console.log('this.gridOffset.x: ', this.gridOffset.x)
+
+    if (dataPoint.visible && this.points) {
+      return (
+          <React.Fragment key={lastPoint.x}>
+            <Circle cx={lastPoint.x + this.gridOffset.x} cy={lastPoint.y} r={dataPoint.radius} fill={dataPoint.outerColor} />
+            <Circle cx={lastPoint.x + this.gridOffset.x} cy={lastPoint.y} r={dataPoint.radius / 2} fill={dataPoint.innerColor} />
+          </React.Fragment>
+      );
+    }
+    return undefined;
+  };
+
   renderTooltip(mergedConfig) {
     const { tooltip } = mergedConfig;
     const tooltipIndex = this.state.tooltipIndex;
@@ -187,40 +207,40 @@ class LineChart extends Component {
     const textHeight = tooltip.textFontSize * 1.5 + tooltip.boxPaddingY;
 
     return (
-      <React.Fragment>
-        <Line
-          x1={dataX + this.gridOffset.x}
-          x2={dataX + this.gridOffset.x}
-          y1={dataY}
-          y2={dataY - 20}
-          stroke={tooltip.lineColor}
-          strokeWidth={tooltip.lineWidth}
-        />
-        <Rect
-          x={this.gridOffset.x + dataX - textWidth / 2}
-          y={this.gridOffset.y + dataY - 20 - textHeight}
-          rx={tooltip.boxBorderRadius}
-          width={textWidth}
-          height={textHeight}
-          fill={tooltip.boxColor}
-          strokeWidth={tooltip.boxBorderWidth}
-          stroke={tooltip.boxBorderColor}
-        />
-        <Text
-          fill={tooltip.textColor}
-          fontSize={tooltip.textFontSize}
-          x={dataX}
-          textAlignVertical="center"
-          y={this.gridOffset.y + dataY - 20 - textHeight / 2}
-          dx={this.gridOffset.x}
-          textAnchor="middle"
-          height={tooltip.textFontSize}
-          dy={tooltip.textFontSize * 0.3}
-          fontWeight="400"
-        >
-          {tooltip.textFormatter(dataValue)}
-        </Text>
-      </React.Fragment>
+        <React.Fragment>
+          <Line
+              x1={dataX + this.gridOffset.x}
+              x2={dataX + this.gridOffset.x}
+              y1={dataY}
+              y2={dataY - 20}
+              stroke={tooltip.lineColor}
+              strokeWidth={tooltip.lineWidth}
+          />
+          <Rect
+              x={this.gridOffset.x + dataX - textWidth / 2}
+              y={this.gridOffset.y + dataY - 20 - textHeight}
+              rx={tooltip.boxBorderRadius}
+              width={textWidth}
+              height={textHeight}
+              fill={tooltip.boxColor}
+              strokeWidth={tooltip.boxBorderWidth}
+              stroke={tooltip.boxBorderColor}
+          />
+          <Text
+              fill={tooltip.textColor}
+              fontSize={tooltip.textFontSize}
+              x={dataX}
+              textAlignVertical="center"
+              y={this.gridOffset.y + dataY - 20 - textHeight / 2}
+              dx={this.gridOffset.x}
+              textAnchor="middle"
+              height={tooltip.textFontSize}
+              dy={tooltip.textFontSize * 0.3}
+              fontWeight="400"
+          >
+            {tooltip.textFormatter(dataValue)}
+          </Text>
+        </React.Fragment>
     );
   }
 
@@ -252,108 +272,110 @@ class LineChart extends Component {
     const gridOffset = this.gridOffset;
 
     return (
-      <View
-        style={Object.assign({}, viewStyle, this.props.style)}
-        onLayout={this.onLayout}
-        {..._.get(this._panResponder, "panHandlers", {})}
-        ref={view => {
-          // Note that when the referenced component is unmounted and whenever the ref changes, the old ref will be called with null as an
-          // argument. This prevents memory leaks in the case that the instance is stored, as in the second example. Also note that when
-          // writing refs with inline function expressions as in the examples here, React sees a different function object each time so on
-          // every update, ref will be called with null immediately before it's called with the component instance.
-          if (view) {
-            this.myComponent = view;
-          }
-        }}
-      >
-        {this.points ? (
-          <Svg width={width} height={height}>
-            <Rect x="0" y="0" width={width} height={height} fill={backgroundColor} />
-            <Rect x={insetX} y={insetY} width={this.yAxisWidth} height={height - insetY * 2} fill={"#fff"} />
-            <Rect x={gridOffset.x} y={gridOffset.y} width={gridSize.width} height={gridSize.height} fill={grid.backgroundColor} />
-            {yAxis.visible &&
-              yLabels &&
-              yLabels.slice(1, yLabels.length - 1).map(yLabel => (
-                <Text
-                  key={yLabel}
-                  fill={yAxis.labelColor}
-                  fontSize={yAxis.labelFontSize}
-                  x={insetX + this.yAxisWidth - 5}
-                  y={this.realY(yLabel)}
-                  textAnchor="end"
-                  height={yAxis.labelFontSize}
-                  fontWeight="400"
-                  dy={yAxis.labelFontSize * 0.3}
-                >
-                  {yAxis.labelFormatter(yLabel)}
-                </Text>
-              ))}
-            {xAxis.visible &&
-              xLabels &&
-              xLabelPoints.map((point, i) => (
-                <Text
-                  key={point.x}
-                  fill={xAxis.labelColor}
-                  fontSize={xAxis.labelFontSize}
-                  x={point.x}
-                  y={point.y}
-                  textAnchor="middle"
-                  height={xAxis.labelFontSize}
-                  dy={xAxis.labelFontSize}
-                  fontWeight="400"
-                >
-                  {xLabels[i]}
-                </Text>
-              ))}
-            {grid.visible &&
-              yLabels.map(yLabel => (
-                <Line
-                  key={yLabel}
-                  x1={gridOffset.x}
-                  y1={this.realY(yLabel)}
-                  x2={gridOffset.x + gridSize.width}
-                  y2={this.realY(yLabel)}
-                  stroke={grid.strokeColor}
-                  strokeWidth={grid.strokeWidth}
-                />
-              ))}
-            {grid.visible && (
-              <React.Fragment>
-                <Line x1={gridOffset.x} y1={this.highestLine} x2={gridOffset.x} y2={this.lowestLine} stroke={grid.strokeColor} strokeWidth={grid.strokeWidth} />
-                <Line
-                  x1={gridOffset.x + gridSize.width}
-                  y1={this.lowestLine}
-                  x2={gridOffset.x + gridSize.width}
-                  y2={this.highestLine}
-                  stroke={grid.strokeColor}
-                  strokeWidth={grid.strokeWidth}
-                />
-              </React.Fragment>
-            )}
+        <View
+            style={Object.assign({}, viewStyle, this.props.style)}
+            onLayout={this.onLayout}
+            {..._.get(this._panResponder, "panHandlers", {})}
+            ref={view => {
+              // Note that when the referenced component is unmounted and whenever the ref changes, the old ref will be called with null as an
+              // argument. This prevents memory leaks in the case that the instance is stored, as in the second example. Also note that when
+              // writing refs with inline function expressions as in the examples here, React sees a different function object each time so on
+              // every update, ref will be called with null immediately before it's called with the component instance.
+              if (view) {
+                this.myComponent = view;
+              }
+            }}
+        >
+          {this.points ? (
+              <Svg width={width + (config.dataPoint && config.dataPoint.radius ? config.dataPoint.radius : 0) } height={height}>
+                <Rect x="0" y="0" width={width} height={height} fill={backgroundColor} />
+                <Rect x={insetX} y={insetY} width={this.yAxisWidth} height={height - insetY * 2} fill={"#fff"} />
+                <Rect x={gridOffset.x} y={gridOffset.y} width={gridSize.width} height={gridSize.height} fill={grid.backgroundColor} />
+                {yAxis.visible &&
+                yLabels &&
+                yLabels.slice(1, yLabels.length - 1).map(yLabel => (
+                    <Text
+                        key={yLabel}
+                        fill={yAxis.labelColor}
+                        fontSize={yAxis.labelFontSize}
+                        x={insetX + this.yAxisWidth - 5}
+                        y={this.realY(yLabel)}
+                        textAnchor="end"
+                        height={yAxis.labelFontSize}
+                        fontWeight="400"
+                        dy={yAxis.labelFontSize * 0.3}
+                    >
+                      {yAxis.labelFormatter(yLabel)}
+                    </Text>
+                ))}
+                {xAxis.visible &&
+                xLabels &&
+                xLabelPoints.map((point, i) => (
+                    <Text
+                        key={point.x}
+                        fill={xAxis.labelColor}
+                        fontSize={xAxis.labelFontSize}
+                        x={point.x}
+                        y={point.y}
+                        textAnchor="middle"
+                        height={xAxis.labelFontSize}
+                        dy={xAxis.labelFontSize}
+                        fontWeight="400"
+                    >
+                      {xLabels[i]}
+                    </Text>
+                ))}
+                {grid.visible &&
+                yLabels.map(yLabel => (
+                    <Line
+                        key={yLabel}
+                        x1={gridOffset.x}
+                        y1={this.realY(yLabel)}
+                        x2={gridOffset.x + gridSize.width}
+                        y2={this.realY(yLabel)}
+                        stroke={grid.strokeColor}
+                        strokeWidth={grid.strokeWidth}
+                    />
+                ))}
+                {grid.visible && (
+                    <React.Fragment>
+                      <Line x1={gridOffset.x} y1={this.highestLine} x2={gridOffset.x} y2={this.lowestLine} stroke={grid.strokeColor} strokeWidth={grid.strokeWidth} />
+                      <Line
+                          x1={gridOffset.x + gridSize.width}
+                          y1={this.lowestLine}
+                          x2={gridOffset.x + gridSize.width}
+                          y2={this.highestLine}
+                          stroke={grid.strokeColor}
+                          strokeWidth={grid.strokeWidth}
+                      />
+                    </React.Fragment>
+                )}
 
-            <Defs>
-              <LinearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <Stop offset="0%" stopColor={area.gradientFrom} stopOpacity={area.gradientFromOpacity} />
-                <Stop offset="100%" stopColor={area.gradientTo} stopOpacity={area.gradientToOpacity} />
-              </LinearGradient>
-            </Defs>
-            {area.visible && <Polygon x={gridOffset.x} points={this.areaPoints} fill="url(#grad)" strokeWidth="0" />}
-            {line.visible && (
-              <Polyline
-                fill="none"
-                strokeLinecap="round"
-                points={this.formattedPoints}
-                x={gridOffset.x}
-                stroke={line.strokeColor}
-                strokeWidth={line.strokeWidth}
-              />
-            )}
-            {this.state.tooltipIndex && this.renderTooltip(mergedConfig)}
-          </Svg>
-        ) : (
-          undefined
-        )}
-      </View>
+                <Defs>
+                  <LinearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <Stop offset="0%" stopColor={area.gradientFrom} stopOpacity={area.gradientFromOpacity} />
+                    <Stop offset="100%" stopColor={area.gradientTo} stopOpacity={area.gradientToOpacity} />
+                  </LinearGradient>
+                </Defs>
+                {area.visible && <Polygon x={gridOffset.x} points={this.areaPoints} fill="url(#grad)" strokeWidth="0" />}
+                {line.visible && (
+                    <Polyline
+                        fill="none"
+                        strokeLinecap="round"
+                        points={this.formattedPoints}
+                        x={gridOffset.x}
+                        stroke={line.strokeColor}
+                        strokeWidth={line.strokeWidth}
+                    />
+                )}
+                {this.state.tooltipIndex && this.renderTooltip(mergedConfig)}
+                {config.dataPoint && this.renderDataPoints(config)}
+
+              </Svg>
+          ) : (
+              undefined
+          )}
+        </View>
     );
   }
 }
@@ -405,6 +427,13 @@ const defaultConfig = {
     boxPaddingX: 0,
     textColor: "black",
     textFontSize: 10
+  },
+  dataPoint: {
+    visible: false,
+    color: "#777",
+    radius: 5,
+    innerColor: "#5B94FF",
+    outerColor: "rgba(189,212,255,0.4)",
   },
   insetY: 0,
   insetX: 0,
