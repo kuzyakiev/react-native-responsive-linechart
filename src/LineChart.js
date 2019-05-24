@@ -310,19 +310,20 @@ class LineChart extends Component {
   renderDataPoints = config => {
     const { dataPoint } = config;
     const label = dataPoint.label;
+    const lastPoint = this.points[this.points.length -1];
 
     if (dataPoint.visible && this.points) {
-      return this.points.map((point, index) => (
-        <React.Fragment key={point.x}>
-          <Circle cx={point.x + this.gridOffset.x} cy={point.y} r={dataPoint.radius} fill={dataPoint.outerColor} />
-          <Circle cx={point.x + this.gridOffset.x} cy={point.y} r={dataPoint.radius / 2} fill={dataPoint.innerColor} />
+      return (
+        <React.Fragment>
+          <Circle cx={lastPoint.x + this.gridOffset.x} cy={lastPoint.y} r={dataPoint.radius} fill={dataPoint.outerColor} />
+          <Circle cx={lastPoint.x + this.gridOffset.x} cy={lastPoint.y} r={dataPoint.radius / 2} fill={dataPoint.innerColor} />
           {label.visible && (
             <Text
               fill={dataPoint.label.labelColor}
               fontSize={label.labelFontSize}
-              x={point.x}
+              x={lastPoint.x}
               textAlignVertical="center"
-              y={this.gridOffset.y + point.y - dataPoint.label.marginBottom}
+              y={this.gridOffset.y + lastPoint.y - dataPoint.label.marginBottom}
               dx={this.gridOffset.x}
               textAnchor="middle"
               height={label.labelFontSize}
@@ -333,7 +334,7 @@ class LineChart extends Component {
             </Text>
           )}
         </React.Fragment>
-      ));
+      );
     }
     return undefined;
   };
@@ -432,7 +433,7 @@ class LineChart extends Component {
         }}
       >
         {this.points ? (
-          <Svg width={width} height={height}>
+          <Svg width={width + (config.dataPoint && config.dataPoint.radius ? config.dataPoint.radius : 0) } height={height}>
             {/* Draw background */}
             <Rect x="0" y="0" width={width} height={height} fill={backgroundColor} />
             {/* Draw Y axis label area | TODO: I think this is no longer needed */}
