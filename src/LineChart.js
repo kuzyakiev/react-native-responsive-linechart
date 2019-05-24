@@ -24,6 +24,14 @@ class LineChart extends Component {
     }
   }
 
+  componentWillReceiveProps(nextProps) {
+    const { data } = this.props;
+
+    if (nextProps.data.length !== data.length) {
+      this.setState({ tooltipIndex: undefined });
+    }
+  }
+
   handleTouchEvent = (evt, gestureState) => {
     const xTouch = -this.state.layoutX + evt.nativeEvent.locationX - this.gridOffset.x;
     if (this.state.dimensions && this.points) {
