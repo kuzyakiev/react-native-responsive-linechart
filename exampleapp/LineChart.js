@@ -9,18 +9,30 @@ import Svg, { Polyline, Rect, Text, Line, Polygon, LinearGradient, Defs, Stop, C
 class LineChart extends Component {
   constructor(props) {
     super(props);
-    this.state = { dimensions: undefined, tooltipIndex: undefined, layoutX: 0 };
+    this.state = { 
+      dimensions: undefined, 
+      tooltipIndex: undefined, 
+      layoutX: 0 
+    };
 
     // Memoize data calculations for rendering
     this.recalculate = memoizeOne(this.recalculate);
 
     // For tooltips to work we need to get funky with the PanResponder.
     // Capturing touch and move events to calculate tooltip index
-    if (_.get(props.config, "tooltip.visible", false) && props.config.interpolation !== "spline") {
+    if (_.get(props.config, "tooltip.visible", true) && props.config.interpolation !== "spline") {
       this._panResponder = PanResponder.create({
         onMoveShouldSetPanResponder: this.handleTouchEvent,
         onStartShouldSetPanResponder: this.handleTouchEvent
       });
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const { data } = this.props;
+
+    if (nextProps.data.length !== data.length) {
+      this.setState({ tooltipIndex: undefined });
     }
   }
 
@@ -310,18 +322,20 @@ class LineChart extends Component {
   renderDataPoints = config => {
     const { dataPoint } = config;
     const label = dataPoint.label;
+    const lastPoint = this.points[this.points.length -1];
 
     if (dataPoint.visible && this.points) {
-      return this.points.map((point, index) => (
-        <React.Fragment key={point.x}>
-          <Circle cx={point.x + this.gridOffset.x} cy={point.y} r={dataPoint.radius} fill={dataPoint.color} />
+      return (
+        <React.Fragment>
+          <Circle cx={lastPoint.x + this.gridOffset.x} cy={lastPoint.y} r={dataPoint.radius} fill={dataPoint.outerColor} />
+          <Circle cx={lastPoint.x + this.gridOffset.x} cy={lastPoint.y} r={dataPoint.radius / 2} fill={dataPoint.innerColor} />
           {label.visible && (
             <Text
               fill={dataPoint.label.labelColor}
               fontSize={label.labelFontSize}
-              x={point.x}
+              x={lastPoint.x}
               textAlignVertical="center"
-              y={this.gridOffset.y + point.y - dataPoint.label.marginBottom}
+              y={this.gridOffset.y + lastPoint.y - dataPoint.label.marginBottom}
               dx={this.gridOffset.x}
               textAnchor="middle"
               height={label.labelFontSize}
@@ -332,7 +346,7 @@ class LineChart extends Component {
             </Text>
           )}
         </React.Fragment>
-      ));
+      );
     }
     return undefined;
   };
@@ -352,19 +366,39 @@ class LineChart extends Component {
     const textWidth = tooltip.labelFormatter(dataValue).length * tooltip.labelFontSize * 0.66 + tooltip.boxPaddingX;
     const textHeight = tooltip.labelFontSize * 1.5 + tooltip.boxPaddingY;
 
+    const calculateRectX = (dataX, textWidth) => {
+      if (this.gridOffset.x + dataX < textWidth / 2) {
+        return 5;
+      } else if (this.gridOffset.x + dataX + textWidth / 2 + 5 > this.state.dimensions.width) {  
+        return this.state.dimensions.width - textWidth;
+      } else {
+        return this.gridOffset.x + dataX - textWidth / 2;
+      }
+    }
+
+    const calculateTextX = (dataX, textWidth) => {
+      if (this.gridOffset.x + dataX < textWidth / 2) {
+        return textWidth / 2 + 5;
+      } else if (this.gridOffset.x + dataX + textWidth / 2 + 5 > this.state.dimensions.width) {  
+        return this.state.dimensions.width - textWidth / 2;
+      } else {
+        return dataX;
+      }
+    }
+
     return (
       <React.Fragment>
         <Line
           x1={dataX + this.gridOffset.x}
           x2={dataX + this.gridOffset.x}
           y1={dataY}
-          y2={dataY - 20}
+          y2={dataY - 10}
           stroke={tooltip.lineColor}
           strokeWidth={tooltip.lineWidth}
         />
         <Rect
-          x={this.gridOffset.x + dataX - textWidth / 2}
-          y={this.gridOffset.y + dataY - 20 - textHeight}
+          x={calculateRectX(dataX, textWidth)}
+          y={this.gridOffset.y + dataY - textHeight}
           rx={tooltip.boxBorderRadius}
           width={textWidth}
           height={textHeight}
@@ -375,9 +409,9 @@ class LineChart extends Component {
         <Text
           fill={tooltip.labelColor}
           fontSize={tooltip.labelFontSize}
-          x={dataX}
+          x={calculateTextX(dataX, textWidth)}
           textAlignVertical="center"
-          y={this.gridOffset.y + dataY - 20 - textHeight / 2}
+          y={this.gridOffset.y + dataY - textHeight / 2}
           dx={this.gridOffset.x}
           textAnchor="middle"
           height={tooltip.labelFontSize}
@@ -431,7 +465,7 @@ class LineChart extends Component {
         }}
       >
         {this.points ? (
-          <Svg width={width} height={height}>
+          <Svg width={width + (config.dataPoint && config.dataPoint.radius ? config.dataPoint.radius : 0) } height={height}>
             {/* Draw background */}
             <Rect x="0" y="0" width={width} height={height} fill={backgroundColor} />
             {/* Draw Y axis label area | TODO: I think this is no longer needed */}
@@ -443,7 +477,7 @@ class LineChart extends Component {
             {this.renderGrid(config)}
             {this.renderDataArea(config)}
             {this.renderDataLine(config)}
-            {this.renderTooltip(config)}
+            {this.props.tooltipIsVisible && this.renderTooltip(config)}
             {this.renderDataPoints(config)}
           </Svg>
         ) : (
@@ -486,7 +520,7 @@ const defaultConfig = {
     labelColor: "#777"
   },
   tooltip: {
-    visible: false,
+    visible: true,
     labelFormatter: v => v.toFixed(2),
     lineColor: "#777",
     lineWidth: 1,
@@ -511,10 +545,12 @@ const defaultConfig = {
       labelFontSize: 12,
       labelColor: "#777",
       labelFormatter: v => String(v),
-      marginBottom: 25
+      marginBottom: 25,
+      innerColor: "#5B94FF",
+      outerColor: "rgba(189,212,255,0.4)",
     }
   },
-  insetY: 0,
+  insetY: -10,
   insetX: 0,
   interpolation: "none",
   backgroundColor: "#fff"
