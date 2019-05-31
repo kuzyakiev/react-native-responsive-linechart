@@ -163,7 +163,7 @@ class LineChart extends Component {
   }
 
   scaleY(y) {
-    return 1 - (y - this.bottom) / this.range;
+    return 1 - (y - this.bottom) / this.range * 0.65;
   }
 
   realX(x) {
