@@ -4,7 +4,7 @@ import React, { Component } from "react";
 import { View, PanResponder } from "react-native";
 import memoizeOne from "memoize-one";
 import _ from "lodash";
-import Svg, { Polyline, Rect, Text, Line, Polygon, LinearGradient, Defs, Stop, Circle } from "react-native-svg";
+import Svg, { Polyline, Rect, Text, TSpan, Line, Polygon, LinearGradient, Defs, Stop, Circle } from "react-native-svg";
 
 class LineChart extends Component {
   constructor(props) {
@@ -353,25 +353,38 @@ class LineChart extends Component {
   };
 
   renderTooltip = config => {
-    if (this.state.tooltipIndex === undefined) {
+    const { dimensions, tooltipIndex } = this.state;
+
+    if (tooltipIndex === undefined) {
       return undefined;
     }
 
+    const { data, tooltipData } = this.props;
     const { tooltip } = config;
 
-    const dataX = this.points[this.state.tooltipIndex].x;
-    const dataY = this.points[this.state.tooltipIndex].y;
+    const dataX = this.points[tooltipIndex].x;
+    const dataY = this.points[tooltipIndex].y;
 
-    const dataValue = this.props.data[this.state.tooltipIndex];
+    const dataValue = data[tooltipIndex];
 
-    const textWidth = tooltip.labelFormatter(dataValue).length * tooltip.labelFontSize * 0.66 + tooltip.boxPaddingX;
-    const textHeight = tooltip.labelFontSize * 1.5 + tooltip.boxPaddingY;
+    let textWidth = 0;
+    let textHeight = 0;
+    let textYOffset = 0;
+
+    if (tooltipData) {
+      textWidth = Math.max(tooltip.labelFormatter(dataValue).length, tooltipData[tooltipIndex].length) * tooltip.labelFontSize * 0.66 + tooltip.boxPaddingX;
+      textHeight = tooltip.labelFontSize * 3 + tooltip.boxPaddingY;
+      textYOffset = tooltip.labelFontSize * 0.66;
+    } else {
+      textWidth = tooltip.labelFormatter(dataValue).length * tooltip.labelFontSize * 0.66 + tooltip.boxPaddingX;
+      textHeight = tooltip.labelFontSize * 1.5 + tooltip.boxPaddingY;
+    }
 
     const calculateRectX = (dataX, textWidth) => {
       if (this.gridOffset.x + dataX < textWidth / 2) {
         return 5;
-      } else if (this.gridOffset.x + dataX + textWidth / 2 + 5 > this.state.dimensions.width) {
-        return this.state.dimensions.width - textWidth;
+      } else if (this.gridOffset.x + dataX + textWidth / 2 + 5 > dimensions.width) {
+        return dimensions.width - textWidth;
       } else {
         return this.gridOffset.x + dataX - textWidth / 2;
       }
@@ -380,8 +393,8 @@ class LineChart extends Component {
     const calculateTextX = (dataX, textWidth) => {
       if (this.gridOffset.x + dataX < textWidth / 2) {
         return textWidth / 2 + 5;
-      } else if (this.gridOffset.x + dataX + textWidth / 2 + 5 > this.state.dimensions.width) {
-        return this.state.dimensions.width - textWidth / 2;
+      } else if (this.gridOffset.x + dataX + textWidth / 2 + 5 > dimensions.width) {
+        return dimensions.width - textWidth / 2;
       } else {
         return dataX;
       }
@@ -393,13 +406,13 @@ class LineChart extends Component {
           x1={dataX + this.gridOffset.x}
           x2={dataX + this.gridOffset.x}
           y1={dataY}
-          y2={dataY - 10}
+          y2={dataY - 20}
           stroke={tooltip.lineColor}
           strokeWidth={tooltip.lineWidth}
         />
         <Rect
           x={calculateRectX(dataX, textWidth)}
-          y={this.gridOffset.y + dataY - textHeight}
+          y={this.gridOffset.y + dataY - 20 - textHeight}
           rx={tooltip.boxBorderRadius}
           width={textWidth}
           height={textHeight}
@@ -410,17 +423,36 @@ class LineChart extends Component {
         <Text
           fill={tooltip.labelColor}
           fontSize={tooltip.labelFontSize}
+          textAlignVertical="center"
+          textAnchor="middle"
+          fontWeight="400"
+          height={tooltipData ? tooltip.labelFontSize * 2 : tooltipData}
+          dy={tooltip.labelFontSize * 0.3}
+          y={this.gridOffset.y + dataY - 20 - textHeight / 2 - textYOffset}
+        >
+          <TSpan height={tooltip.labelFontSize} x={calculateTextX(dataX, textWidth)} dx={this.gridOffset.x}>
+            {tooltip.labelFormatter(dataValue)}
+          </TSpan>
+
+          {tooltipData && (
+            <TSpan height={tooltip.labelFontSize} x={calculateTextX(dataX, textWidth)} dx={this.gridOffset.x} dy={tooltip.labelFontSize * 1.5}>
+              {tooltipData[tooltipIndex]}
+            </TSpan>
+          )}
+        </Text>
+        {/* <Text
+          fill={tooltip.labelColor}
+          fontSize={tooltip.labelFontSize}
           x={calculateTextX(dataX, textWidth)}
           textAlignVertical="center"
-          y={this.gridOffset.y + dataY - textHeight / 2}
+          y={this.gridOffset.y + dataY - textHeight}
           dx={this.gridOffset.x}
           textAnchor="middle"
           height={tooltip.labelFontSize}
           dy={tooltip.labelFontSize * 0.3}
           fontWeight="400"
         >
-          {tooltip.labelFormatter(dataValue)}
-        </Text>
+        </Text> */}
       </React.Fragment>
     );
   };
@@ -551,7 +583,7 @@ const defaultConfig = {
       outerColor: "rgba(189,212,255,0.4)"
     }
   },
-  insetY: -10,
+  insetY: 0,
   insetX: 0,
   interpolation: "none",
   backgroundColor: "#fff"
