@@ -4,7 +4,18 @@ import React, { Component } from "react";
 import { View, PanResponder } from "react-native";
 import memoizeOne from "memoize-one";
 import _ from "lodash";
-import Svg, { Polyline, Rect, Text, TSpan, Line, Polygon, LinearGradient, Defs, Stop, Circle } from "react-native-svg";
+import Svg, {
+  Polyline,
+  Rect,
+  Text,
+  TSpan,
+  Line,
+  Polygon,
+  LinearGradient,
+  Defs,
+  Stop,
+  Circle
+} from "react-native-svg";
 
 class LineChart extends Component {
   constructor(props) {
@@ -20,7 +31,10 @@ class LineChart extends Component {
 
     // For tooltips to work we need to get funky with the PanResponder.
     // Capturing touch and move events to calculate tooltip index
-    if (_.get(props.config, "tooltip.visible", true) && props.config.interpolation !== "spline") {
+    if (
+      _.get(props.config, "tooltip.visible", true) &&
+      props.config.interpolation !== "spline"
+    ) {
       this._panResponder = PanResponder.create({
         onMoveShouldSetPanResponder: this.handleTouchEvent,
         onStartShouldSetPanResponder: this.handleTouchEvent
@@ -40,7 +54,9 @@ class LineChart extends Component {
     const xTouch = evt.nativeEvent.locationX - this.gridOffset.x;
 
     if (this.state.dimensions && this.points) {
-      idx = Math.round((xTouch / this.gridSize.width) * (this.props.data.length - 1));
+      idx = Math.round(
+        (xTouch / this.gridSize.width) * (this.props.data.length - 1)
+      );
       if (this.state.tooltipIndex != idx) {
         if (idx >= 0 && idx <= this.props.data.length - 1) {
           this.setState({ tooltipIndex: idx });
@@ -59,7 +75,17 @@ class LineChart extends Component {
 
     const { width, height } = dimensions;
     const mergedConfig = deepmerge(defaultConfig, config);
-    const { grid, line, area, yAxis, xAxis, insetX, insetY, interpolation, backgroundColor } = mergedConfig;
+    const {
+      grid,
+      line,
+      area,
+      yAxis,
+      xAxis,
+      insetX,
+      insetY,
+      interpolation,
+      backgroundColor
+    } = mergedConfig;
 
     this.highestDataPoint = Math.max(...data);
     this.lowestDataPoint = Math.min(...data);
@@ -74,13 +100,19 @@ class LineChart extends Component {
         this.highestYLabel = this.highestDataPoint + 3;
       } else {
         grid.stepSize = this.dataRange / 6.0;
-        this.lowestYLabel = (Math.floor(this.lowestDataPoint / grid.stepSize) - 1) * grid.stepSize;
-        this.highestYLabel = (Math.ceil(this.highestDataPoint / grid.stepSize) + 1) * grid.stepSize;
+        this.lowestYLabel =
+          (Math.floor(this.lowestDataPoint / grid.stepSize) - 1) *
+          grid.stepSize;
+        this.highestYLabel =
+          (Math.ceil(this.highestDataPoint / grid.stepSize) + 1) *
+          grid.stepSize;
       }
     } else {
       // grid specified in config
-      this.lowestYLabel = (Math.floor(this.lowestDataPoint / grid.stepSize) - 1) * grid.stepSize;
-      this.highestYLabel = (Math.ceil(this.highestDataPoint / grid.stepSize) + 1) * grid.stepSize;
+      this.lowestYLabel =
+        (Math.floor(this.lowestDataPoint / grid.stepSize) - 1) * grid.stepSize;
+      this.highestYLabel =
+        (Math.ceil(this.highestDataPoint / grid.stepSize) + 1) * grid.stepSize;
     }
 
     this.top = this.highestYLabel;
@@ -118,7 +150,9 @@ class LineChart extends Component {
 
     this.points = this.calculatePoints(interpolation);
     this.formattedPoints = this.formatPoints(this.points);
-    this.areaPoints = this.formatPoints(this.calculateAreaPoints(interpolation));
+    this.areaPoints = this.formatPoints(
+      this.calculateAreaPoints(interpolation)
+    );
 
     if (xAxis.visible) {
       this.xLabelPoints = data.map((y, x) => ({
@@ -290,11 +324,24 @@ class LineChart extends Component {
         <React.Fragment>
           <Defs>
             <LinearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <Stop offset="0%" stopColor={area.gradientFrom} stopOpacity={area.gradientFromOpacity} />
-              <Stop offset="100%" stopColor={area.gradientTo} stopOpacity={area.gradientToOpacity} />
+              <Stop
+                offset="0%"
+                stopColor={area.gradientFrom}
+                stopOpacity={area.gradientFromOpacity}
+              />
+              <Stop
+                offset="100%"
+                stopColor={area.gradientTo}
+                stopOpacity={area.gradientToOpacity}
+              />
             </LinearGradient>
           </Defs>
-          <Polygon x={this.gridOffset.x} points={this.areaPoints} fill="url(#grad)" strokeWidth="0" />
+          <Polygon
+            x={this.gridOffset.x}
+            points={this.areaPoints}
+            fill="url(#grad)"
+            strokeWidth="0"
+          />
         </React.Fragment>
       );
     }
@@ -328,8 +375,18 @@ class LineChart extends Component {
     if (dataPoint.visible && this.points) {
       return (
         <React.Fragment>
-          <Circle cx={lastPoint.x + this.gridOffset.x} cy={lastPoint.y} r={dataPoint.radius} fill={dataPoint.outerColor} />
-          <Circle cx={lastPoint.x + this.gridOffset.x} cy={lastPoint.y} r={dataPoint.radius / 2} fill={dataPoint.innerColor} />
+          <Circle
+            cx={lastPoint.x + this.gridOffset.x}
+            cy={lastPoint.y}
+            r={dataPoint.radius}
+            fill={dataPoint.outerColor}
+          />
+          <Circle
+            cx={lastPoint.x + this.gridOffset.x}
+            cy={lastPoint.y}
+            r={dataPoint.radius / 2}
+            fill={dataPoint.innerColor}
+          />
           {label.visible && (
             <Text
               fill={dataPoint.label.labelColor}
@@ -372,18 +429,32 @@ class LineChart extends Component {
     let textYOffset = 0;
 
     if (tooltipData) {
-      textWidth = Math.max(tooltip.labelFormatter(dataValue).length, tooltipData[tooltipIndex].length) * tooltip.labelFontSize * 0.66 + tooltip.boxPaddingX;
+      textWidth =
+        Math.max(
+          tooltip.labelFormatter(dataValue).length,
+          tooltipData[tooltipIndex].length
+        ) *
+          tooltip.labelFontSize *
+          0.66 +
+        tooltip.boxPaddingX;
       textHeight = tooltip.labelFontSize * 3 + tooltip.boxPaddingY;
       textYOffset = tooltip.labelFontSize * 0.66;
     } else {
-      textWidth = tooltip.labelFormatter(dataValue).length * tooltip.labelFontSize * 0.66 + tooltip.boxPaddingX;
+      textWidth =
+        tooltip.labelFormatter(dataValue).length *
+          tooltip.labelFontSize *
+          0.66 +
+        tooltip.boxPaddingX;
       textHeight = tooltip.labelFontSize * 1.5 + tooltip.boxPaddingY;
     }
 
     const calculateRectX = (dataX, textWidth) => {
       if (this.gridOffset.x + dataX < textWidth / 2) {
         return 5;
-      } else if (this.gridOffset.x + dataX + textWidth / 2 + 5 > dimensions.width) {
+      } else if (
+        this.gridOffset.x + dataX + textWidth / 2 + 5 >
+        dimensions.width
+      ) {
         return dimensions.width - textWidth;
       } else {
         return this.gridOffset.x + dataX - textWidth / 2;
@@ -393,7 +464,10 @@ class LineChart extends Component {
     const calculateTextX = (dataX, textWidth) => {
       if (this.gridOffset.x + dataX < textWidth / 2) {
         return textWidth / 2 + 5;
-      } else if (this.gridOffset.x + dataX + textWidth / 2 + 5 > dimensions.width) {
+      } else if (
+        this.gridOffset.x + dataX + textWidth / 2 + 5 >
+        dimensions.width
+      ) {
         return dimensions.width - textWidth / 2;
       } else {
         return dataX;
@@ -430,29 +504,25 @@ class LineChart extends Component {
           dy={tooltip.labelFontSize * 0.3}
           y={this.gridOffset.y + dataY - 20 - textHeight / 2 - textYOffset}
         >
-          <TSpan height={tooltip.labelFontSize} x={calculateTextX(dataX, textWidth)} dx={this.gridOffset.x}>
+          <TSpan
+            height={tooltip.labelFontSize}
+            x={calculateTextX(dataX, textWidth)}
+            dx={this.gridOffset.x}
+          >
             {tooltip.labelFormatter(dataValue)}
           </TSpan>
 
           {tooltipData && (
-            <TSpan height={tooltip.labelFontSize} x={calculateTextX(dataX, textWidth)} dx={this.gridOffset.x} dy={tooltip.labelFontSize * 1.5}>
+            <TSpan
+              height={tooltip.labelFontSize}
+              x={calculateTextX(dataX, textWidth)}
+              dx={this.gridOffset.x}
+              dy={tooltip.labelFontSize * 1.5}
+            >
               {tooltipData[tooltipIndex]}
             </TSpan>
           )}
         </Text>
-        {/* <Text
-          fill={tooltip.labelColor}
-          fontSize={tooltip.labelFontSize}
-          x={calculateTextX(dataX, textWidth)}
-          textAlignVertical="center"
-          y={this.gridOffset.y + dataY - textHeight}
-          dx={this.gridOffset.x}
-          textAnchor="middle"
-          height={tooltip.labelFontSize}
-          dy={tooltip.labelFontSize * 0.3}
-          fontWeight="400"
-        >
-        </Text> */}
       </React.Fragment>
     );
   };
@@ -490,7 +560,9 @@ class LineChart extends Component {
 
     return (
       <View
-        style={Object.assign({}, viewStyle, this.props.style, { backgroundColor })}
+        style={Object.assign({}, viewStyle, this.props.style, {
+          backgroundColor
+        })}
         onLayout={this.onLayout}
         {..._.get(this._panResponder, "panHandlers", {})}
         ref={view => {
@@ -498,13 +570,39 @@ class LineChart extends Component {
         }}
       >
         {this.points ? (
-          <Svg width={width + (config.dataPoint && config.dataPoint.radius ? config.dataPoint.radius : 0)} height={height}>
+          <Svg
+            width={
+              width +
+              (config.dataPoint && config.dataPoint.radius
+                ? config.dataPoint.radius
+                : 0)
+            }
+            height={height}
+          >
             {/* Draw background */}
-            <Rect x="0" y="0" width={width} height={height} fill={backgroundColor} />
+            <Rect
+              x="0"
+              y="0"
+              width={width}
+              height={height}
+              fill={backgroundColor}
+            />
             {/* Draw Y axis label area | TODO: I think this is no longer needed */}
-            <Rect x={insetX} y={insetY} width={this.yAxisWidth} height={gridSize.height} fill={backgroundColor} />
+            <Rect
+              x={insetX}
+              y={insetY}
+              width={this.yAxisWidth}
+              height={gridSize.height}
+              fill={backgroundColor}
+            />
             {/* Draw background for actual chart area */}
-            <Rect x={gridOffset.x} y={gridOffset.y} width={gridSize.width} height={gridSize.height} fill={grid.backgroundColor} />
+            <Rect
+              x={gridOffset.x}
+              y={gridOffset.y}
+              width={gridSize.width}
+              height={gridSize.height}
+              fill={grid.backgroundColor}
+            />
             {this.renderYAxisLabels(config)}
             {this.renderXAxisLabels(config)}
             {this.renderGrid(config)}
